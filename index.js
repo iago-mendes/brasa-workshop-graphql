@@ -4,27 +4,68 @@ const {buildSchema} = require('graphql')
 
 const schema = buildSchema(
 `
+	input MessageInput
+	{
+		content: String
+		author: String
+	}
+
+	type Message
+	{
+		id: ID!
+		content: String
+		author: String
+	}
+
 	type Query
 	{
-		rollDice(numDice: Int!, numSides: Int): [Int]
+		getMessage(id: ID!): Message
+	}
+
+	type Mutation
+	{
+		createMessage(input: MessageInput): Message
+		updateMessage(id: ID!, input: MessageInput): Message
 	}
 `)
 
-const root =
+class Message
 {
-	rollDice: args =>
+	constructor(id, {content, author})
 	{
-		const numDice = args.numDice
-		const numSides = args.numSides || 6
-
-		const output = []
-		for (let i = 0; i < numDice; i++)
-		{
-			output.push(1 + Math.floor(Math.random() * numSides))
-		}
-
-		return output
+		this.id = id
+		this.content = content
+		this.author = author
 	}
+}
+
+var fakeDatabase =
+{}
+
+var root = {
+	getMessage: ({id}) =>
+	{
+		if (!fakeDatabase[id])
+			throw new Error(`Não existem mensagens com id ${id}`)
+		
+		return new Message(id, fakeDatabase[id])
+	},
+
+	createMessage: ({input}) =>
+	{
+		const id = require('crypto').randomBytes(10).toString('hex')
+
+		fakeDatabase[id] = input
+		return new Message(id, input)
+	},
+
+	updateMessage: ({id, input}) => {
+		if (!fakeDatabase[id])
+			throw new Error(`Não existem mensagens com id ${id} para alterar`)
+		
+		fakeDatabase[id] = input
+		return new Message(id, input)
+	},
 }
 
 const app = express()
