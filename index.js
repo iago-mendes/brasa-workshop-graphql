@@ -6,25 +6,24 @@ const schema = buildSchema(
 `
 	type Query
 	{
-		quoteOfTheDay: String
-		random: Float!
-		rollThreeDice: [Int]
+		rollDice(numDice: Int!, numSides: Int): [Int]
 	}
 `)
 
 const root =
 {
-	quoteOfTheDay: () =>
+	rollDice: args =>
 	{
-		return Math.random() < 0.5 ? 'Knowledge is power' : 'Agora vai'
-	},
-	random: () =>
-	{
-		return Math.random()
-	},
-	rollThreeDice: () =>
-	{
-		return [1,2,3].map(n => 1 + Math.floor(Math.random() * 6))
+		const numDice = args.numDice
+		const numSides = args.numSides || 6
+
+		const output = []
+		for (let i = 0; i < numDice; i++)
+		{
+			output.push(1 + Math.floor(Math.random() * numSides))
+		}
+
+		return output
 	}
 }
 
